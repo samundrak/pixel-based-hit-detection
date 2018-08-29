@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "parcel index.html",
+    "start": "serve dist",
+    "dev": "parcel index.html",
     "build": "parcel build index.html"
   },
   "keywords": [],
@@ -13,11 +14,12 @@
   "devDependencies": {
     "babel": "^6.23.0",
     "babel-preset-react": "^6.24.1",
-    "parcel": "^1.9.7",
-    "react": "^16.4.2",
-    "react-dom": "^16.4.2"
+    "parcel": "^1.9.7"
   },
   "dependencies": {
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
+    "serve": "^10.0.0",
     "fabric": "^2.3.6"
   }
 }
