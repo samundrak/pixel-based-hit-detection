@@ -6,7 +6,7 @@ import paths from './paths.json';
 window.fabric = fabric;
 
 // const worker = new ('./worker.js')
-const roundPath = paths[Math.floor(Math.random() * paths.length - 1)];
+const roundPath = paths[Math.floor(Math.random() * paths.length - 1) + 1];
 
 const mainCanvas = new fabric.Canvas('main');
 const virtualCanvas = new fabric.Canvas('virtual');
