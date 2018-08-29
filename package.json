@@ -1,0 +1,23 @@
+{
+  "name": "hit-detection",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "babel": "^6.23.0",
+    "babel-preset-react": "^6.24.1",
+    "parcel": "^1.9.7",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2"
+  },
+  "dependencies": {
+    "fabric": "^2.3.6"
+  }
+}
