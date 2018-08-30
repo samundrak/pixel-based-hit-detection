@@ -11,6 +11,19 @@ class EdgeDetector {
     this.columnCount = this.imageDataArray[0].length;
   }
 
+  linear() {
+    const arr = [];
+    for (let y = 0; y < this.rowCount; y++) {
+      for (let x = 0; x < this.columnCount; x++) {
+        const pixel = this.imageDataArray[y][x];
+        const { red, green, blue, alpha } = pixel.color;
+        if(red === 255 && green === 239 && blue=== 0) {
+          arr.push(pixel)
+        }
+      }
+    }
+    return arr;
+  }
   detect() {
     const top = this.detectFromTop();
     const left = this.detectFromLeft();

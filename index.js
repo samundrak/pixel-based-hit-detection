@@ -47,13 +47,14 @@ mainCanvas.renderAll();
 
 const path1 = new fabric.Path(roundPath, {
   fill: 'transparent',
-  stroke: 'red',
-  strokeWidth: 5,
+  stroke: 'rgb(255,239,0)',
+  strokeWidth: 1,
   selectable: false,
   left: path.left,
   top: path.top,
 });
 virtualCanvas.add(path1);
+path1.bringToFront();
 virtualCanvas.renderAll();
 
 virtualCanvas.add(rect1);
@@ -62,50 +63,55 @@ const imageData = virtualCanvas.contextContainer.getImageData(
   path1.left,
   path1.top,
   path1.width,
-  path1.height
+  path1.height,
 );
 
-const imageData2D = [];
-const data = imageData.data;
-let row = 0;
-let column = 0;
-for (let i = 0; i < data.length; i += 4) {
-  if (column >= imageData.width) {
-    row++;
-    column = 0;
-  }
+function to2DArray(data) {
+  const imageData2D = [];
 
-  if (!imageData2D[row]) {
-    imageData2D[row] = [];
-  }
+  let row = 0;
+  let column = 0;
+  for (let i = 0; i < data.length; i += 4) {
+    if (column >= imageData.width) {
+      row++;
+      column = 0;
+    }
 
-  const red = data[i];
-  const green = data[i + 1];
-  const blue = data[i + 2];
-  const alpha = data[i + 3];
-  imageData2D[row].push({
-    color: {
-      red,
-      green,
-      blue,
-      alpha,
-    },
-    coords: {
-      x: column,
-      y: row,
-    },
-    absolute: {
-      x: path1.left + column,
-      y: path1.top + row,
-    },
-  });
-  column++;
+    if (!imageData2D[row]) {
+      imageData2D[row] = [];
+    }
+
+    const red = data[i];
+    const green = data[i + 1];
+    const blue = data[i + 2];
+    const alpha = data[i + 3];
+    const pixel = {
+      color: {
+        red,
+        green,
+        blue,
+        alpha,
+      },
+      coords: {
+        x: column,
+        y: row,
+      },
+      absolute: {
+        x: path1.left + column,
+        y: path1.top + row,
+      },
+    };
+    imageData2D[row].push(pixel);
+    column++;
+  }
+  return imageData2D;
 }
+const data = to2DArray(imageData.data);
 
-const edgeDetector = new EdgeDectector(imageData2D);
-const leftEdge = edgeDetector.detect();
-
-rect.on('moving', (e) => {
+const edgeDetector = new EdgeDectector(data);
+const leftEdge = edgeDetector.linear();
+console.log(leftEdge.length);
+rect.on('moving', e => {
   const target = e.target;
   rect1.set(Object.assign({}, target));
   virtualCanvas.renderAll();
@@ -113,18 +119,24 @@ rect.on('moving', (e) => {
 
 virtualCanvas.on('after:render', () => {
   const state = {};
+  // const pixels = virtualCanvas.contextContainer.getImageData(
+  //   path1.left,
+  //   path1.top,
+  //   path1.width,
+  //   path1.height,
+  // ).data;
   const every = leftEdge.every((item, index) => {
     const pixel = virtualCanvas.contextContainer.getImageData(
       path1.left + item.coords.x,
       path1.top + item.coords.y,
       1,
-      1
+      1,
     ).data;
-    const isAlpha = pixel[3] === 0;
-    if (!isAlpha) {
+    const isPristine = pixel[0] === 255 && pixel[1] === 239 && pixel[2] === 0;
+    if (!isPristine) {
       state.logs = [].concat(window.reactApp.state.logs, item);
     }
-    return isAlpha;
+    return isPristine;
   });
   document.body.style.backgroundColor = every ? 'green' : 'red';
   state.isHit = !every;
@@ -212,9 +224,9 @@ class App extends React.Component {
 
 render(
   <App
-    expose={(context) => {
+    expose={context => {
       window.reactApp = context;
     }}
   />,
-  document.querySelector('#app')
+  document.querySelector('#app'),
 );
