@@ -5,6 +5,11 @@ import EdgeDectector from './EdgeDetector';
 import paths from './paths.json';
 window.fabric = fabric;
 
+let imageDataContext = null;
+{
+  const canvas = document.getElementById('imageDataOnly');
+  imageDataContext = canvas.getContext('2d');
+}
 // const worker = new ('./worker.js')
 const roundPath = paths[Math.floor(Math.random() * paths.length - 1) + 1];
 
@@ -60,10 +65,10 @@ virtualCanvas.renderAll();
 virtualCanvas.add(rect1);
 
 const imageData = virtualCanvas.contextContainer.getImageData(
-  path1.left,
-  path1.top,
-  path1.width,
-  path1.height,
+  path1.left ,
+  path1.top ,
+  path1.width + 50,
+  path1.height + 50,
 );
 
 function to2DArray(data) {
@@ -110,7 +115,6 @@ const data = to2DArray(imageData.data);
 
 const edgeDetector = new EdgeDectector(data);
 const leftEdge = edgeDetector.linear();
-console.log(leftEdge.length);
 rect.on('moving', e => {
   const target = e.target;
   rect1.set(Object.assign({}, target));
@@ -118,28 +122,29 @@ rect.on('moving', e => {
 });
 
 virtualCanvas.on('after:render', () => {
+  console.time('one');
   const state = {};
-  // const pixels = virtualCanvas.contextContainer.getImageData(
-  //   path1.left,
-  //   path1.top,
-  //   path1.width,
-  //   path1.height,
-  // ).data;
+  const imageData = virtualCanvas.contextContainer.getImageData(
+    path1.left,
+    path1.top ,
+    path1.width + 50,
+    path1.height + 50,
+  );
+  const pixels2D = to2DArray(imageData.data);
   const every = leftEdge.every((item, index) => {
-    const pixel = virtualCanvas.contextContainer.getImageData(
-      path1.left + item.coords.x,
-      path1.top + item.coords.y,
-      1,
-      1,
-    ).data;
-    const isPristine = pixel[0] === 255 && pixel[1] === 239 && pixel[2] === 0;
+    const pixel = pixels2D[item.coords.y][item.coords.x].color;
+    const isPristine =
+      pixel.red === 255 && pixel.green === 239 && pixel.blue === 0;
     if (!isPristine) {
       state.logs = [].concat(window.reactApp.state.logs, item);
     }
     return isPristine;
   });
+  console.timeEnd('one');
   document.body.style.backgroundColor = every ? 'green' : 'red';
   state.isHit = !every;
+  // imageDataContext.clearReact();
+  imageDataContext.putImageData(imageData, 0, 0);
   window.reactApp.setState(state);
 });
 
@@ -167,14 +172,35 @@ class App extends React.Component {
         </p>
         <hr />
         <p>Log: </p>
-        <ul style={{ height: '400px', overflow: 'scroll' }}>
+        <ul
+          style={{
+            height: '400px',
+            overflow: 'scroll',
+            backgroundColor: 'black',
+          }}
+        >
           {this.state.logs.reverse().map((item, index) => {
             return (
               <li
                 key={index}
-                style={{ borderTop: 'solid', borderWidth: '1px' }}
+                style={{
+                  borderTop: 'solid',
+                  borderWidth: '1px',
+                  borderColor: 'white',
+                  listStyle: 'none',
+                }}
               >
-                {JSON.stringify(item)}
+                <span
+                  style={{
+                    color: `rgba(${item.color.red}, ${item.color.green}, ${
+                      item.color.blue
+                    }, ${item.color.alpha})`,
+                    width: '10px',
+                    height: '10px',
+                  }}
+                >
+                  {JSON.stringify(item)}
+                </span>
               </li>
             );
           })}

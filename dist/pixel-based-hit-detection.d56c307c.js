@@ -49677,6 +49677,11 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 window.fabric = _fabric.fabric;
 
+var imageDataContext = null;
+{
+  var canvas = document.getElementById('imageDataOnly');
+  imageDataContext = canvas.getContext('2d');
+}
 // const worker = new ('./worker.js')
 var roundPath = _paths2.default[Math.floor(Math.random() * _paths2.default.length - 1) + 1];
 
@@ -49731,7 +49736,7 @@ virtualCanvas.renderAll();
 
 virtualCanvas.add(rect1);
 
-var imageData = virtualCanvas.contextContainer.getImageData(path1.left, path1.top, path1.width, path1.height);
+var imageData = virtualCanvas.contextContainer.getImageData(path1.left, path1.top, path1.width + 50, path1.height + 50);
 
 function to2DArray(data) {
   var imageData2D = [];
@@ -49777,7 +49782,6 @@ var data = to2DArray(imageData.data);
 
 var edgeDetector = new _EdgeDetector2.default(data);
 var leftEdge = edgeDetector.linear();
-console.log(leftEdge.length);
 rect.on('moving', function (e) {
   var target = e.target;
   rect1.set(Object.assign({}, target));
@@ -49785,23 +49789,23 @@ rect.on('moving', function (e) {
 });
 
 virtualCanvas.on('after:render', function () {
+  console.time('one');
   var state = {};
-  // const pixels = virtualCanvas.contextContainer.getImageData(
-  //   path1.left,
-  //   path1.top,
-  //   path1.width,
-  //   path1.height,
-  // ).data;
+  var imageData = virtualCanvas.contextContainer.getImageData(path1.left, path1.top, path1.width + 50, path1.height + 50);
+  var pixels2D = to2DArray(imageData.data);
   var every = leftEdge.every(function (item, index) {
-    var pixel = virtualCanvas.contextContainer.getImageData(path1.left + item.coords.x, path1.top + item.coords.y, 1, 1).data;
-    var isPristine = pixel[0] === 255 && pixel[1] === 239 && pixel[2] === 0;
+    var pixel = pixels2D[item.coords.y][item.coords.x].color;
+    var isPristine = pixel.red === 255 && pixel.green === 239 && pixel.blue === 0;
     if (!isPristine) {
       state.logs = [].concat(window.reactApp.state.logs, item);
     }
     return isPristine;
   });
+  console.timeEnd('one');
   document.body.style.backgroundColor = every ? 'green' : 'red';
   state.isHit = !every;
+  // imageDataContext.clearReact();
+  imageDataContext.putImageData(imageData, 0, 0);
   window.reactApp.setState(state);
 });
 
@@ -49850,15 +49854,36 @@ var App = function (_React$Component) {
         ),
         _react2.default.createElement(
           'ul',
-          { style: { height: '400px', overflow: 'scroll' } },
+          {
+            style: {
+              height: '400px',
+              overflow: 'scroll',
+              backgroundColor: 'black'
+            }
+          },
           this.state.logs.reverse().map(function (item, index) {
             return _react2.default.createElement(
               'li',
               {
                 key: index,
-                style: { borderTop: 'solid', borderWidth: '1px' }
+                style: {
+                  borderTop: 'solid',
+                  borderWidth: '1px',
+                  borderColor: 'white',
+                  listStyle: 'none'
+                }
               },
-              JSON.stringify(item)
+              _react2.default.createElement(
+                'span',
+                {
+                  style: {
+                    color: 'rgba(' + item.color.red + ', ' + item.color.green + ', ' + item.color.blue + ', ' + item.color.alpha + ')',
+                    width: '10px',
+                    height: '10px'
+                  }
+                },
+                JSON.stringify(item)
+              )
             );
           })
         )
@@ -49950,7 +49975,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '45279' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '45318' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 
